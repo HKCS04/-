@@ -19,130 +19,13 @@ from tg_bot.modules.helper_funcs.misc import paginate_modules
 
 PM_START_TEXT = """
 
-ഹായ് {}, എന്റെ പേര് {}! ഞാൻ [ഇദ്ദേഹം](tg://user?id={}) നോക്കി നടത്തുന്ന ഒരു അടിപൊളി അഡ്മിൻ ബോട്ടാണ്.
+Hi {},
 
-എന്നെ നിർമ്മിച്ചിരിക്കുന്നത് python3 യിൽ python-telegram-bot ലൈബ്രറി ഉപയോഗിച്ചാണ്. ഞാൻ പൂർണ്ണമായിട്ടും ഓപ്പൺസോഴ്സ്ഡ് ആണ്. എന്റെ കോഡ് നിങ്ങൾക്ക് [ഇവിടെ](https://github.com/jithumon/tgbot) കാണുവാൻ സാധിക്കും.
-
-എന്നെപ്പോലെ ഒരു അഡ്മിൻ ബോട്ടിനെ ഉണ്ടാക്കുവാൻ താഴെ കൊടുത്തിരിക്കുന്ന വീഡിയോ കാണുക.
-
-എന്റെ അപ്ഡേറ്റുകളെക്കുറിച്ചും പ്രവർത്തനത്തെപറ്റിയും അറിയുവാൻ അപ്ഡേറ്റ് ചാനൽ സബ്സ്ക്രൈബ് ചെയ്യുക.
-
-കൂടെ താഴെ കൊടുത്തിരിക്കുന്ന ടെക് ഗെയിമിംഗ് യൂട്യൂബ് ചാനൽ സബ്സ്ക്രൈബ് ചെയ്യാനും മറക്കേണ്ട.
-
-ലഭ്യമായ കമാന്റുകളെപ്പറ്റി അറിയുവാൻ /help അമർത്തുക.
+I'm a Group manager Bot Created for [Power Movies Group](Power മൂവീസ് Group
+https://t.me/power_movies_group), only authorised admins can access don't waste your time 😌
 
 """
 
-HELP_STRINGS = """
-Hey there! My name is *{}*.
-I'm a modular group management bot with a few fun extras! Have a look at the following for an idea of some of \
-the things I can help you with.
-*Main* commands available:
- - /start: start the bot
- - /help: PM's you this message.
- - /help <module name>: PM's you info about that module.
- - /donate: information about how to donate!
- - /settings:
-   - in PM: will send you your settings for all supported modules.
-   - in a group: will redirect you to pm, with all that chat's settings.
-{}
-And the following:
-""".format(dispatcher.bot.first_name, "" if not ALLOW_EXCL else "\nAll commands can either be used with / or !.\n")
-
-DONATE_STRING = """Heya, glad to hear you want to donate!
-It took lots of work for [my creator](t.me/SonOfLars) to get me to where I am now, and every donation helps \
-motivate him to make me even better. All the donation money will go to a better VPS to host me, and/or beer \
-(see his bio!). He's just a poor student, so every little helps!
-There are two ways of paying him; [PayPal](paypal.me/PaulSonOfLars), or [Monzo](monzo.me/paulnionvestergaardlarsen)."""
-
-IMPORTED = {}
-MIGRATEABLE = []
-HELPABLE = {}
-STATS = []
-USER_INFO = []
-DATA_IMPORT = []
-DATA_EXPORT = []
-
-CHAT_SETTINGS = {}
-USER_SETTINGS = {}
-
-GDPR = []
-
-for module_name in ALL_MODULES:
-    imported_module = importlib.import_module("tg_bot.modules." + module_name)
-    if not hasattr(imported_module, "__mod_name__"):
-        imported_module.__mod_name__ = imported_module.__name__
-
-    if not imported_module.__mod_name__.lower() in IMPORTED:
-        IMPORTED[imported_module.__mod_name__.lower()] = imported_module
-    else:
-        raise Exception("Can't have two modules with the same name! Please change one")
-
-    if hasattr(imported_module, "__help__") and imported_module.__help__:
-        HELPABLE[imported_module.__mod_name__.lower()] = imported_module
-
-    # Chats to migrate on chat_migrated events
-    if hasattr(imported_module, "__migrate__"):
-        MIGRATEABLE.append(imported_module)
-
-    if hasattr(imported_module, "__stats__"):
-        STATS.append(imported_module)
-
-    if hasattr(imported_module, "__gdpr__"):
-        GDPR.append(imported_module)
-
-    if hasattr(imported_module, "__user_info__"):
-        USER_INFO.append(imported_module)
-
-    if hasattr(imported_module, "__import_data__"):
-        DATA_IMPORT.append(imported_module)
-
-    if hasattr(imported_module, "__export_data__"):
-        DATA_EXPORT.append(imported_module)
-
-    if hasattr(imported_module, "__chat_settings__"):
-        CHAT_SETTINGS[imported_module.__mod_name__.lower()] = imported_module
-
-    if hasattr(imported_module, "__user_settings__"):
-        USER_SETTINGS[imported_module.__mod_name__.lower()] = imported_module
-
-
-# do not async
-def send_help(chat_id, text, keyboard=None):
-    if not keyboard:
-        keyboard = InlineKeyboardMarkup(paginate_modules(0, HELPABLE, "help"))
-    dispatcher.bot.send_message(chat_id=chat_id,
-                                text=text,
-                                parse_mode=ParseMode.MARKDOWN,
-                                reply_markup=keyboard)
-
-
-@run_async
-def test(bot: Bot, update: Update):
-    # pprint(eval(str(update)))
-    # update.effective_message.reply_text("Hola tester! _I_ *have* `markdown`", parse_mode=ParseMode.MARKDOWN)
-    update.effective_message.reply_text("This person edited a message")
-    print(update.effective_message)
-
-
-@run_async
-def start(bot: Bot, update: Update, args: List[str]):
-    if update.effective_chat.type == "private":
-        if len(args) >= 1:
-            if args[0].lower() == "help":
-                send_help(update.effective_chat.id, HELP_STRINGS)
-
-            elif args[0].lower().startswith("stngs_"):
-                match = re.match("stngs_(.*)", args[0].lower())
-                chat = dispatcher.bot.getChat(match.group(1))
-
-                if is_user_admin(chat, update.effective_user.id):
-                    send_settings(match.group(1), update.effective_user.id, False)
-                else:
-                    send_settings(match.group(1), update.effective_user.id, True)
-
-            elif args[0][1:].isdigit() and "rules" in IMPORTED:
-                IMPORTED["rules"].send_rules(update, args[0], from_pm=True)
 
         else:
             first_name = update.effective_user.first_name
@@ -150,9 +33,9 @@ def start(bot: Bot, update: Update, args: List[str]):
                 PM_START_TEXT.format(escape_markdown(first_name), escape_markdown(bot.first_name), OWNER_ID),
 
                 parse_mode=ParseMode.MARKDOWN, reply_markup=InlineKeyboardMarkup(
-                    [[InlineKeyboardButton(text="🎉 Add me to your group", url="t.me/{}?startgroup=true".format(bot.username)),  InlineKeyboardButton(text="🤖 Make Own Admin Bot", url="https://youtu.be/W6CLKrehy6w")],
-                     [InlineKeyboardButton(text="👥 Support Group", url="https://t.me/KeralaBots"), InlineKeyboardButton(text="🔔 Update Channel", url="https://t.me/KochuUpdates")],
-                     [InlineKeyboardButton(text="🎬 Youtube Channel", url="https://www.youtube.com/stealthtechnogaming?sub_confirmation=1"), InlineKeyboardButton(text="🛠 Help", url="https://t.me/{}?start=help".format(bot.username)) ]]))
+                    [[InlineKeyboardButton(text="🎉 Add me to your group", url="https://t.me/+WJ6slt1DI-U2ZDA9".format(bot.username)),  InlineKeyboardButton(text="🤖 Make Own Admin Bot", url="https://youtu.be/W6CLKrehy6w")],
+                     [InlineKeyboardButton(text="👥 Support Group", url="https://t.me/power_movies_group"), InlineKeyboardButton(text="🔔 Update Channel", url="https://t.me/power_movies_channel")],
+                     [InlineKeyboardButton(text="🎬 Telegram Channel", url="https://t.me/power_movies_channel"), InlineKeyboardButton(text="🛠 Help", url="https://t.me/power_movies_channel"]]))
 
     else:
         update.effective_message.reply_text("ചത്തിട്ടില്ലാ...")
